@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Plateforme Financement — Application métier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --ink:#0B1220; --ink-2:#111A2E; --ink-3:#1A2440;
+  --paper:#F6F2EA; --line:#2A3454; --line-light:rgba(255,255,255,.08);
+  --gold:#C9A35B; --gold-2:#E2C088; --emerald:#3FB58A;
+  --red:#E26B6B; --amber:#E2A65B; --blue:#5B9BE2; --purple:#A07BD6;
+  --muted:#8A93A8; --muted-2:#5C6582;
+  --radius:14px; --radius-lg:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Manrope',sans-serif;background:var(--ink);color:#E8EBF2;
+  -webkit-font-smoothing:antialiased;min-height:100vh;line-height:1.55;
+}
+.serif{font-family:'Fraunces',serif;font-weight:400;letter-spacing:-.02em}
+
+/* ============ MODE SWITCHER ============ */
+.mode-bar{
+  position:fixed;top:14px;right:14px;z-index:1000;
+  background:rgba(11,18,32,.85);backdrop-filter:blur(12px);
+  border:1px solid var(--line);border-radius:999px;
+  padding:5px;display:flex;gap:4px;
+  box-shadow:0 12px 30px -10px rgba(0,0,0,.6);
+}
+.mode-bar button{
+  border:none;background:transparent;color:#9AA3BA;
+  padding:8px 14px;border-radius:999px;font-size:12px;font-weight:600;
+  cursor:pointer;font-family:inherit;letter-spacing:.02em;transition:all .2s;
+}
+.mode-bar button.active{background:linear-gradient(180deg,#E8CD93,#C9A35B);color:#0B1220}
+.mode-bar button:hover:not(.active){color:#fff;background:rgba(255,255,255,.04)}
+.mode-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2);padding:8px 10px 8px 14px;display:flex;align-items:center}
+
+/* ============ VIEWS ============ */
+.view{display:none;min-height:100vh}
+.view.active{display:block;animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.wrap{max-width:1240px;margin:0 auto;padding:0 28px}
+
+/* ============ Common buttons ============ */
+.btn{
+  display:inline-flex;align-items:center;gap:10px;padding:11px 20px;border-radius:10px;
+  font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;border:none;
+  font-family:inherit;transition:all .2s;
+}
+.btn-primary{
+  color:#0B1220;background:linear-gradient(180deg,#E8CD93,#C9A35B);
+  box-shadow:0 10px 30px -10px rgba(201,163,91,.55),inset 0 1px 0 rgba(255,255,255,.4);
+}
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-ghost{color:#E8EBF2;background:transparent;border:1px solid var(--line)}
+.btn-ghost:hover{border-color:#4A5680}
+.btn-sm{padding:8px 14px;font-size:13px}
+
+/* ============================================== */
+/* ============ VIEW 1 : LANDING + QUALIF ======== */
+/* ============================================== */
+.nav{
+  position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+  background:rgba(11,18,32,.72);border-bottom:1px solid var(--line-light);
+}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:74px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff}
+.logo-mark{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,var(--gold),#8E6E2D);
+  display:grid;place-items:center;box-shadow:0 8px 24px -8px rgba(201,163,91,.55);
+}
+.logo-mark svg{width:18px;height:18px}
+.logo-wordmark{display:flex;flex-direction:column;line-height:1}
+.logo-wordmark .lw-1{font-family:'Fraunces',serif;font-style:italic;font-size:13px;color:#9AA3BA;margin-bottom:3px}
+.logo-wordmark .lw-2{font-weight:700;font-size:18px;color:#fff;letter-spacing:-.005em}
+
+.hero{padding:60px 0 80px;position:relative;overflow:hidden}
+.hero::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(900px 500px at 85% 10%,rgba(201,163,91,.13),transparent 60%);
+}
+.hero::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(ellipse at 50% 0%,black 30%,transparent 75%);
+}
+.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:start;position:relative;z-index:2;padding-top:30px}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:10px;padding:7px 14px;border:1px solid var(--line);
+  border-radius:999px;background:rgba(255,255,255,.02);
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#C9D0E0;margin-bottom:24px;
+}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--emerald);box-shadow:0 0 0 4px rgba(63,181,138,.15)}
+.hero h1{font-family:'Fraunces',serif;font-size:clamp(36px,4.8vw,62px);line-height:1.04;letter-spacing:-.035em;font-weight:400;color:#fff;margin-bottom:22px}
+.hero h1 em{font-style:italic;font-weight:300;background:linear-gradient(180deg,#E8CD93,#C9A35B 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .lede{font-size:17px;color:#B5BDD0;max-width:520px;margin-bottom:30px}
+.trust-row{display:flex;flex-direction:column;gap:14px;padding-top:24px;border-top:1px solid var(--line-light)}
+.trust-row .item{display:flex;align-items:center;gap:12px;font-size:14px;color:#C9D0E0}
+.trust-row .item svg{width:18px;height:18px;color:var(--emerald);flex-shrink:0}
+.trust-row .item b{color:#fff;font-weight:600}
+
+/* ============ QUALIFIER (decision tree) ============ */
+.qualifier{
+  position:relative;background:linear-gradient(180deg,rgba(26,36,64,.85),rgba(17,26,46,.95));
+  border:1px solid var(--line);border-radius:var(--radius-lg);padding:32px;
+  box-shadow:0 30px 80px -30px rgba(0,0,0,.6);
+}
+.qualifier::before{
+  content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg,rgba(201,163,91,.35),transparent 40%);
+  -webkit-mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);
+  -webkit-mask-composite:xor;mask-composite:exclude;padding:1px;
+}
+.q-progress{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;font-size:11px;color:var(--muted)}
+.q-progress .label{letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.q-progress .step{font-weight:600;color:#C9D0E0}
+.q-bar{height:3px;background:var(--line);border-radius:999px;overflow:hidden;margin-bottom:28px}
+.q-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-2));transition:width .5s cubic-bezier(.2,.7,.2,1)}
+
+.q-step-card{animation:slideIn .4s cubic-bezier(.2,.7,.2,1)}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+.q-question{font-family:'Fraunces',serif;font-size:22px;font-weight:500;color:#fff;letter-spacing:-.01em;margin-bottom:8px;line-height:1.3}
+.q-hint{font-size:13px;color:var(--muted);margin-bottom:24px}
+
+.q-options{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.q-opt{
+  padding:16px 18px;background:rgba(11,18,32,.5);border:1px solid var(--line);
+  border-radius:12px;color:#E8EBF2;font-family:inherit;font-size:14.5px;font-weight:500;
+  cursor:pointer;text-align:left;transition:all .15s;display:flex;align-items:center;gap:12px;
+}
+.q-opt:hover{border-color:var(--gold);background:rgba(201,163,91,.05);transform:translateX(2px)}
+.q-opt .check{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);flex-shrink:0;transition:all .15s}
+.q-opt:hover .check{border-color:var(--gold);background:var(--gold)}
+
+.q-input{
+  width:100%;padding:14px 16px;background:rgba(11,18,32,.6);border:1px solid var(--line);
+  color:#fff;border-radius:10px;font-family:inherit;font-size:14px;transition:all .2s;
+}
+.q-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,163,91,.15)}
+.q-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.q-field label{display:block;font-size:12px;font-weight:600;color:#C9D0E0;margin-bottom:8px}
+
+.q-nav{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.q-back{background:transparent;border:none;color:var(--muted);font-family:inherit;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 0}
+.q-back:hover{color:#fff}
+
+/* Result states */
+.q-result{text-align:center;padding:20px 0}
+.q-result-icon{width:64px;height:64px;border-radius:50%;margin:0 auto 20px;display:grid;place-items:center}
+.q-result.ok .q-result-icon{background:rgba(63,181,138,.15);color:var(--emerald)}
+.q-result.ko .q-result-icon{background:rgba(226,107,107,.15);color:var(--red)}
+.q-result.ok h3{font-family:'Fraunces',serif;font-size:26px;color:#fff;font-weight:500;margin-bottom:10px;letter-spacing:-.01em}
+.q-result.ko h3{font-family:'Fraunces',serif;font-size:24px;color:#fff;font-weight:500;margin-bottom:10px;letter-spacing:-.01em}
+.q-result p{font-size:14.5px;color:#B5BDD0;margin-bottom:20px;line-height:1.6}
+.q-pieces{background:rgba(201,163,91,.06);border:1px solid rgba(201,163,91,.25);border-radius:12px;padding:18px;text-align:left;margin-bottom:22px}
+.q-pieces .title{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:12px}
+.q-pieces ul{list-style:none}
+.q-pieces li{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:14px;color:#E8EBF2}
+.q-pieces li svg{width:14px;height:14px;color:var(--gold-2);flex-shrink:0}
+
+@media (max-width:980px){
+  .hero-grid{grid-template-columns:1fr;gap:40px}
+}
+
+/* ============================================== */
+/* ============ VIEW 2 : DASHBOARD CLIENT ======== */
+/* ============================================== */
+.app-shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.sidebar{
+  background:var(--ink-2);border-right:1px solid var(--line-light);
+  padding:24px 18px;display:flex;flex-direction:column;gap:6px;
+}
+.sidebar .logo{margin-bottom:32px;padding:0 8px}
+.side-link{
+  display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;
+  color:#9AA3BA;text-decoration:none;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;
+}
+.side-link svg{width:18px;height:18px;flex-shrink:0}
+.side-link:hover{background:rgba(255,255,255,.04);color:#fff}
+.side-link.active{background:rgba(201,163,91,.1);color:var(--gold-2)}
+.side-section{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-2);font-weight:600;padding:18px 14px 8px}
+
+.client-info{
+  margin-top:auto;padding:14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--line);
+}
+.client-info .name{font-size:13px;color:#fff;font-weight:600;margin-bottom:2px}
+.client-info .role{font-size:11px;color:var(--muted)}
+
+.main{padding:32px 40px;overflow-y:auto;max-height:100vh}
+.main-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:34px}
+.main-head h1{font-family:'Fraunces',serif;font-size:34px;font-weight:400;color:#fff;letter-spacing:-.02em;margin-bottom:8px}
+.main-head .sub{color:#9AA3BA;font-size:14px}
+
+/* Timeline */
+.timeline-card{
+  background:linear-gradient(180deg,rgba(26,36,64,.5),rgba(17,26,46,.5));
+  border:1px solid var(--line);border-radius:var(--radius-lg);padding:32px;margin-bottom:24px;
+}
+.timeline-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:14px}
+.timeline-head h2{font-family:'Fraunces',serif;font-size:22px;color:#fff;font-weight:500;letter-spacing:-.01em}
+.status-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600}
+.status-pill.active{background:rgba(91,155,226,.15);color:var(--blue);border:1px solid rgba(91,155,226,.3)}
+.status-pill .pulse{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.timeline{position:relative;padding-left:8px}
+.t-step{display:grid;grid-template-columns:40px 1fr auto;gap:20px;padding-bottom:28px;position:relative}
+.t-step:last-child{padding-bottom:0}
+.t-step::before{
+  content:"";position:absolute;left:19px;top:34px;bottom:-6px;width:2px;background:var(--line);
+}
+.t-step:last-child::before{display:none}
+.t-step.done::before{background:linear-gradient(180deg,var(--emerald),var(--line))}
+.t-dot{
+  width:38px;height:38px;border-radius:50%;background:rgba(11,18,32,.6);border:2px solid var(--line);
+  display:grid;place-items:center;color:var(--muted);z-index:2;flex-shrink:0;
+}
+.t-step.done .t-dot{background:rgba(63,181,138,.15);border-color:var(--emerald);color:var(--emerald)}
+.t-step.current .t-dot{background:rgba(91,155,226,.15);border-color:var(--blue);color:var(--blue);box-shadow:0 0 0 4px rgba(91,155,226,.1)}
+.t-content h4{font-size:15px;color:#fff;font-weight:600;margin-bottom:4px}
+.t-step.done .t-content h4{color:#fff}
+.t-step:not(.done):not(.current) .t-content h4{color:var(--muted)}
+.t-content p{font-size:13px;color:#9AA3BA;line-height:1.5}
+.t-date{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* Documents grid */
+.docs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.doc-card{
+  background:linear-gradient(180deg,rgba(26,36,64,.5),rgba(17,26,46,.5));
+  border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;
+  transition:all .2s;position:relative;
+}
+.doc-card.uploaded{border-color:rgba(63,181,138,.3);background:linear-gradient(180deg,rgba(63,181,138,.06),rgba(63,181,138,.02))}
+.doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.doc-icon{
+  width:42px;height:42px;border-radius:10px;background:rgba(201,163,91,.1);border:1px solid rgba(201,163,91,.2);
+  display:grid;place-items:center;color:var(--gold-2);flex-shrink:0;
+}
+.doc-card.uploaded .doc-icon{background:rgba(63,181,138,.1);border-color:rgba(63,181,138,.3);color:var(--emerald)}
+.doc-icon svg{width:20px;height:20px}
+.doc-status{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;letter-spacing:.02em}
+.doc-status.pending{background:rgba(226,166,91,.12);color:var(--amber);border:1px solid rgba(226,166,91,.25)}
+.doc-status.uploaded{background:rgba(63,181,138,.12);color:var(--emerald);border:1px solid rgba(63,181,138,.25)}
+.doc-name{font-size:15px;color:#fff;font-weight:600;margin-bottom:2px}
+.doc-desc{font-size:12.5px;color:var(--muted);line-height:1.5}
+.doc-upload{
+  margin-top:auto;display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:10px 14px;background:rgba(255,255,255,.04);border:1px dashed var(--line);
+  border-radius:8px;color:#C9D0E0;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.doc-upload:hover{border-color:var(--gold);color:var(--gold-2);background:rgba(201,163,91,.05)}
+.doc-uploaded-info{font-size:12px;color:#9AA3BA;display:flex;align-items:center;gap:8px;padding-top:4px;border-top:1px solid var(--line-light)}
+.doc-uploaded-info b{color:#fff;font-weight:500}
+
+/* Messages */
+.msg-card{
+  background:linear-gradient(180deg,rgba(26,36,64,.5),rgba(17,26,46,.5));
+  border:1px solid var(--line);border-radius:var(--radius-lg);padding:28px;
+}
+.msg-thread{display:flex;flex-direction:column;gap:14px;max-height:340px;overflow-y:auto;padding-right:8px;margin-bottom:18px}
+.msg{display:flex;gap:12px;max-width:80%}
+.msg.them{align-self:flex-start}
+.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.msg-avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:13px;flex-shrink:0;font-family:'Fraunces',serif}
+.msg.them .msg-avatar{background:linear-gradient(135deg,#C9A35B,#8E6E2D);color:#0B1220}
+.msg.me .msg-avatar{background:rgba(91,155,226,.2);color:var(--blue);border:1px solid rgba(91,155,226,.3)}
+.msg-bubble{background:rgba(11,18,32,.5);border:1px solid var(--line);padding:11px 16px;border-radius:14px;font-size:14px;color:#E8EBF2;line-height:1.5}
+.msg.me .msg-bubble{background:rgba(91,155,226,.08);border-color:rgba(91,155,226,.2)}
+.msg-meta{font-size:11px;color:var(--muted-2);margin-top:4px}
+
+.msg-input-row{display:flex;gap:10px}
+.msg-input-row input{flex:1;padding:13px 16px;background:rgba(11,18,32,.6);border:1px solid var(--line);color:#fff;border-radius:10px;font-family:inherit;font-size:14px}
+.msg-input-row input:focus{outline:none;border-color:var(--gold)}
+
+/* Stat cards */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.stat-card{
+  background:linear-gradient(180deg,rgba(26,36,64,.5),rgba(17,26,46,.5));
+  border:1px solid var(--line);border-radius:16px;padding:22px;
+}
+.stat-card .label{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:10px}
+.stat-card .value{font-family:'Fraunces',serif;font-size:32px;font-weight:400;color:#fff;line-height:1;letter-spacing:-.02em;margin-bottom:8px}
+.stat-card .value em{color:var(--gold-2);font-style:italic;font-weight:300}
+.stat-card .delta{font-size:12px;color:var(--emerald);font-weight:600}
+
+.section-title{font-family:'Fraunces',serif;font-size:22px;color:#fff;font-weight:500;margin-bottom:18px;letter-spacing:-.01em}
+
+/* ============================================== */
+/* ============ VIEW 3 : BACK-OFFICE ============ */
+/* ============================================== */
+.bo-shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.bo-sidebar{
+  background:var(--ink-2);border-right:1px solid var(--line-light);padding:24px 16px;
+}
+.bo-main{padding:28px 32px;overflow-x:hidden}
+.bo-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+.bo-head h1{font-family:'Fraunces',serif;font-size:28px;color:#fff;font-weight:500;letter-spacing:-.02em}
+.bo-head .sub{font-size:13px;color:#9AA3BA;margin-top:4px}
+
+.bo-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+.bo-stat{
+  background:linear-gradient(180deg,rgba(26,36,64,.5),rgba(17,26,46,.5));
+  border:1px solid var(--line);border-radius:14px;padding:18px;
+}
+.bo-stat .label{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px}
+.bo-stat .val{font-family:'Fraunces',serif;font-size:28px;color:#fff;font-weight:400;letter-spacing:-.02em;line-height:1}
+.bo-stat .val em{color:var(--gold-2);font-style:italic}
+
+/* Kanban */
+.kanban{display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;margin:0 -32px;padding-left:32px;padding-right:32px}
+.k-col{flex:0 0 280px;background:rgba(255,255,255,.02);border:1px solid var(--line-light);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:400px}
+.k-col-head{display:flex;justify-content:space-between;align-items:center;padding:0 4px 8px;border-bottom:1px solid var(--line-light)}
+.k-col-title{font-size:12px;color:#fff;font-weight:600;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+.k-col-title .k-dot{width:8px;height:8px;border-radius:50%}
+.k-col-count{font-size:11px;color:var(--muted);font-weight:600;background:rgba(255,255,255,.05);padding:2px 8px;border-radius:999px}
+
+/* Status colors */
+.s-new{color:var(--blue)} .k-dot.s-new,.s-new-bg{background:var(--blue)}
+.s-pieces{color:var(--amber)} .k-dot.s-pieces,.s-pieces-bg{background:var(--amber)}
+.s-complete{color:#7BD692} .k-dot.s-complete,.s-complete-bg{background:#7BD692}
+.s-instruct{color:var(--purple)} .k-dot.s-instruct,.s-instruct-bg{background:var(--purple)}
+.s-present{color:var(--gold-2)} .k-dot.s-present,.s-present-bg{background:var(--gold-2)}
+.s-offer{color:#5BE2D6} .k-dot.s-offer,.s-offer-bg{background:#5BE2D6}
+.s-closing{color:#E2B85B} .k-dot.s-closing,.s-closing-bg{background:#E2B85B}
+.s-won{color:var(--emerald)} .k-dot.s-won,.s-won-bg{background:var(--emerald)}
+.s-lost{color:var(--red)} .k-dot.s-lost,.s-lost-bg{background:var(--red)}
+
+.k-card{
+  background:linear-gradient(180deg,rgba(26,36,64,.7),rgba(17,26,46,.7));
+  border:1px solid var(--line);border-radius:11px;padding:14px;cursor:pointer;transition:all .15s;
+  display:flex;flex-direction:column;gap:10px;
+}
+.k-card:hover{border-color:var(--gold);transform:translateY(-1px);box-shadow:0 8px 20px -8px rgba(0,0,0,.4)}
+.k-card .society{font-size:14px;font-weight:600;color:#fff;line-height:1.3}
+.k-card .contact{font-size:12px;color:#9AA3BA}
+.k-card .amount{font-family:'Fraunces',serif;font-size:18px;color:var(--gold-2);font-weight:500;letter-spacing:-.01em}
+.k-meta{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--line-light);font-size:11px;color:var(--muted)}
+.k-meta .tag{background:rgba(255,255,255,.04);padding:3px 8px;border-radius:6px;font-weight:500}
+.k-meta .docs-progress{display:flex;align-items:center;gap:6px}
+.k-meta .docs-progress svg{width:12px;height:12px}
+
+/* Modal */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(5,8,17,.85);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px);
+}
+.modal-backdrop.active{display:flex}
+.modal{
+  background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius-lg);
+  max-width:780px;width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;
+  animation:slideIn .3s cubic-bezier(.2,.7,.2,1);
+}
+.modal-head{padding:24px 28px;border-bottom:1px solid var(--line-light);display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+.modal-head h3{font-family:'Fraunces',serif;font-size:22px;color:#fff;font-weight:500;margin-bottom:4px;letter-spacing:-.01em}
+.modal-head .sub{font-size:13px;color:#9AA3BA}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;font-size:20px;line-height:1}
+.modal-close:hover{color:#fff}
+.modal-body{padding:24px 28px;overflow-y:auto;flex:1}
+.modal-section{margin-bottom:24px}
+.modal-section-title{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:12px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px}
+.modal-field{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line-light);font-size:13.5px}
+.modal-field span:first-child{color:#9AA3BA}
+.modal-field span:last-child{color:#fff;font-weight:500;text-align:right}
+.modal-foot{padding:18px 28px;border-top:1px solid var(--line-light);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+
+.status-select{
+  background:rgba(11,18,32,.6);border:1px solid var(--line);color:#fff;
+  padding:9px 14px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;
+  cursor:pointer;
+}
+
+.doc-list-modal{display:flex;flex-direction:column;gap:8px}
+.doc-item-modal{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(11,18,32,.5);
+  border:1px solid var(--line);border-radius:10px;font-size:13.5px;
+}
+.doc-item-modal svg{width:18px;height:18px;flex-shrink:0}
+.doc-item-modal.ok svg{color:var(--emerald)}
+.doc-item-modal.missing svg{color:var(--muted)}
+.doc-item-modal.missing{opacity:.6}
+.doc-item-modal .name{flex:1;color:#fff;font-weight:500}
+.doc-item-modal .meta{font-size:11px;color:var(--muted)}
+
+@media (max-width:880px){
+  .app-shell,.bo-shell{grid-template-columns:1fr}
+  .sidebar,.bo-sidebar{display:none}
+  .docs-grid,.bo-stats,.stats-row,.modal-grid{grid-template-columns:1fr}
+  .main{padding:20px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ MODE SWITCHER (DEMO) ============ -->
+<div class="mode-bar">
+  <span class="mode-label">Démo</span>
+  <button class="active" onclick="setView('landing', this)">1. Prospect</button>
+  <button onclick="setView('client', this)">2. Client</button>
+  <button onclick="setView('bo', this)">3. Consultant</button>
+</div>
+
+<!-- ============================================== -->
+<!-- ============ VIEW 1 : LANDING ================ -->
+<!-- ============================================== -->
+<div class="view active" id="view-landing">
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="#" class="logo">
+        <span class="logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#0B1220" stroke-width="2.5" stroke-linecap="round">
+            <path d="M4 18 L10 12 L14 16 L20 6"/><path d="M14 6 L20 6 L20 12"/>
+          </svg>
+        </span>
+        <span class="logo-wordmark">
+          <span class="lw-1">Plateforme</span>
+          <span class="lw-2">Financement</span>
+        </span>
+      </a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span>Qualification en 2 minutes · 100% confidentiel</span>
+        <h1>Êtes-vous <em>finançable</em> ?<br>Découvrez-le en 2 minutes.</h1>
+        <p class="lede">Répondez à quelques questions sur votre activité. Notre algorithme analyse votre dossier selon les critères réels des financeurs. Si éligible, vous accédez immédiatement à votre espace dédié.</p>
+        <div class="trust-row">
+          <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <b>Diagnostic gratuit</b> en moins de 2 minutes</div>
+          <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <b>Accès immédiat</b> à un espace de suivi personnalisé</div>
+          <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <b>Un consultant dédié</b> revient vers vous sous 48h</div>
+        </div>
+      </div>
+
+      <!-- ========== DECISION TREE ========== -->
+      <div class="qualifier">
+        <div class="q-progress">
+          <span class="label" id="q-label">Étape 1 — Besoin</span>
+          <span class="step"><span id="q-curr">1</span> / <span id="q-total">8</span></span>
+        </div>
+        <div class="q-bar"><div class="q-bar-fill" id="q-bar-fill" style="width:12.5%"></div></div>
+        <div id="q-content"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================== -->
+<!-- ============ VIEW 2 : CLIENT DASHBOARD ======= -->
+<!-- ============================================== -->
+<div class="view" id="view-client">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a href="#" class="logo">
+        <span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0B1220" stroke-width="2.5" stroke-linecap="round"><path d="M4 18 L10 12 L14 16 L20 6"/><path d="M14 6 L20 6 L20 12"/></svg></span>
+        <span class="logo-wordmark"><span class="lw-1">Plateforme</span><span class="lw-2">Financement</span></span>
+      </a>
+
+      <div class="side-section">Mon dossier</div>
+      <a class="side-link active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Vue d'ensemble</a>
+      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2 H6 A2 2 0 0 0 4 4 V20 A2 2 0 0 0 6 22 H18 A2 2 0 0 0 20 20 V8 Z M14 2 V8 H20"/></svg> Mes documents</a>
+      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15 A2 2 0 0 1 19 17 H7 L3 21 V5 A2 2 0 0 1 5 3 H19 A2 2 0 0 1 21 5 Z"/></svg> Messagerie <span style="margin-left:auto;background:var(--gold);color:#0B1220;font-size:10px;padding:2px 7px;border-radius:999px;font-weight:700">2</span></a>
+      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 L2 7 L12 12 L22 7 L12 2 M2 17 L12 22 L22 17 M2 12 L12 17 L22 12"/></svg> Offres reçues</a>
+
+      <div class="side-section">Compte</div>
+      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21 V19 A4 4 0 0 0 16 15 H8 A4 4 0 0 0 4 19 V21"/></svg> Mon profil</a>
+      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Paramètres</a>
+
+      <div class="client-info">
+        <div class="name" id="client-name">Mon Entreprise SAS</div>
+        <div class="role" id="client-contact">Jean Dupont · Dirigeant</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="main-head">
+        <div>
+          <h1>Bonjour <span id="client-firstname">Jean</span>,</h1>
+          <p class="sub">Voici l'état d'avancement de votre dossier de financement.</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="setView('landing', document.querySelector('.mode-bar button'))">← Refaire qualification</button>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="label">Montant demandé</div>
+          <div class="value" id="stat-amount"><em>—</em></div>
+          <div class="delta" id="stat-type">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Statut du dossier</div>
+          <div class="value serif" style="font-size:22px;letter-spacing:-.01em" id="stat-status">Pièces en attente</div>
+          <div class="delta">Étape 2 sur 8</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Documents</div>
+          <div class="value"><em><span id="stat-docs-done">1</span></em>/<span id="stat-docs-total">4</span></div>
+          <div class="delta" id="stat-docs-pct">25% complété</div>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="timeline-card">
+        <div class="timeline-head">
+          <h2>Avancement</h2>
+          <span class="status-pill active"><span class="pulse"></span>En cours</span>
+        </div>
+        <div class="timeline" id="client-timeline"></div>
+      </div>
+
+      <!-- Documents -->
+      <h2 class="section-title">Documents à fournir</h2>
+      <div class="docs-grid" id="client-docs"></div>
+
+      <!-- Messages -->
+      <h2 class="section-title" style="margin-top:32px">Messagerie</h2>
+      <div class="msg-card">
+        <div class="msg-thread" id="client-thread">
+          <div class="msg them">
+            <div class="msg-avatar">SL</div>
+            <div>
+              <div class="msg-bubble">Bonjour <span id="msg-firstname">Jean</span>, je suis Sophie Lefèvre, votre consultante dédiée. J'ai pris connaissance de votre dossier — pourriez-vous me transmettre votre dernier bilan dès que possible ?</div>
+              <div class="msg-meta">Sophie Lefèvre · Aujourd'hui à 09:42</div>
+            </div>
+          </div>
+          <div class="msg them">
+            <div class="msg-avatar">SL</div>
+            <div>
+              <div class="msg-bubble">Je suis disponible pour un point téléphonique demain entre 14h et 17h si vous le souhaitez.</div>
+              <div class="msg-meta">Sophie Lefèvre · Aujourd'hui à 09:43</div>
+            </div>
+          </div>
+        </div>
+        <div class="msg-input-row">
+          <input type="text" placeholder="Écrire un message…" id="msg-input" onkeydown="if(event.key==='Enter') sendMsg()" />
+          <button class="btn btn-primary btn-sm" onclick="sendMsg()">Envoyer</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- ============ VIEW 3 : BACK-OFFICE ============ -->
+<!-- ============================================== -->
+<div class="view" id="view-bo">
+  <div class="bo-shell">
+    <aside class="bo-sidebar">
+      <a href="#" class="logo" style="margin-bottom:28px">
+        <span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0B1220" stroke-width="2.5" stroke-linecap="round"><path d="M4 18 L10 12 L14 16 L20 6"/><path d="M14 6 L20 6 L20 12"/></svg></span>
+        <span class="logo-wordmark"><span class="lw-1">Plateforme</span><span class="lw-2">Financement</span></span>
+      </a>
+      <div class="side-section">Espace consultants</div>
+      <a class="side-link active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg> Pipeline</a>
+      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21 V19 A4 4 0 0 0 13 15 H5 A4 4 0 0 0 1 19 V21"/><circle cx="9" cy="7" r="4"/><path d="M23 21 V19 A4 4 0 0 0 20 15.13 M16 3.13 A4 4 0 0 1 16 10.87"/></svg> Tous les leads</a>
+      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08 V12 A10 10 0 1 1 5.93 4.06"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Dossiers gagnés</a>
+      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Statistiques</a>
+      <div class="side-section">Équipe</div>
+      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21 V19 A4 4 0 0 0 16 15 H8 A4 4 0 0 0 4 19 V21"/></svg> Consultants</a>
+      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16 V8 A2 2 0 0 0 19 6 L13 6 L11 4 L5 4 A2 2 0 0 0 3 6 V16 A2 2 0 0 0 5 18 H19 A2 2 0 0 0 21 16 Z"/></svg> Partenaires</a>
+
+      <div class="client-info">
+        <div class="name">Sophie Lefèvre</div>
+        <div class="role">Consultant senior</div>
+      </div>
+    </aside>
+
+    <main class="bo-main">
+      <div class="bo-head">
+        <div>
+          <h1>Pipeline des dossiers</h1>
+          <p class="sub">Vue d'ensemble · <span id="bo-count">—</span> dossiers actifs</p>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost btn-sm">Filtrer</button>
+          <button class="btn btn-primary btn-sm">+ Nouveau lead</button>
+        </div>
+      </div>
+
+      <div class="bo-stats">
+        <div class="bo-stat">
+          <div class="label">En instruction</div>
+          <div class="val" id="bo-stat-1">—</div>
+        </div>
+        <div class="bo-stat">
+          <div class="label">Montant pipeline</div>
+          <div class="val"><em id="bo-stat-2">—</em></div>
+        </div>
+        <div class="bo-stat">
+          <div class="label">Closing ce mois</div>
+          <div class="val" id="bo-stat-3">—</div>
+        </div>
+        <div class="bo-stat">
+          <div class="label">Taux conversion</div>
+          <div class="val"><em>62%</em></div>
+        </div>
+      </div>
+
+      <div class="kanban" id="kanban"></div>
+    </main>
+  </div>
+</div>
+
+<!-- ============ MODAL DETAIL DOSSIER ============ -->
+<div class="modal-backdrop" id="modal" onclick="if(event.target===this) closeModal()">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+/* =========================================
+   STATE MANAGEMENT (window.storage simulé)
+   ========================================= */
+
+const STORAGE_KEY = 'pf-app-state';
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return { currentClient: null, deals: getDefaultDeals() };
+}
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+/* =========================================
+   STATUTS PIPELINE
+   ========================================= */
+const STATUSES = [
+  { id: 'new',      label: 'Nouveau',                 cls: 's-new',      step: 1 },
+  { id: 'pieces',   label: 'Pièces en attente',       cls: 's-pieces',   step: 2 },
+  { id: 'complete', label: 'Dossier complet',         cls: 's-complete', step: 3 },
+  { id: 'instruct', label: 'En instruction',          cls: 's-instruct', step: 4 },
+  { id: 'present',  label: 'Présenté aux financeurs', cls: 's-present',  step: 5 },
+  { id: 'offer',    label: 'Offre(s) reçue(s)',       cls: 's-offer',    step: 6 },
+  { id: 'closing',  label: 'En closing',              cls: 's-closing',  step: 7 },
+  { id: 'won',      label: 'Gagné',                   cls: 's-won',      step: 8 },
+  { id: 'lost',     label: 'Perdu',                   cls: 's-lost',     step: 0 }
+];
+
+const TIMELINE_STEPS = [
+  { id: 'new',      title: 'Demande reçue',           desc: 'Votre dossier a été créé suite à votre qualification.' },
+  { id: 'pieces',   title: 'Collecte des pièces',     desc: 'Téléversez les documents requis dans votre espace.' },
+  { id: 'complete', title: 'Dossier complet',         desc: 'Toutes les pièces sont validées par nos équipes.' },
+  { id: 'instruct', title: 'Instruction interne',     desc: 'Modélisation financière et préparation du mémo.' },
+  { id: 'present',  title: 'Présentation aux financeurs', desc: 'Votre dossier est envoyé à un panel ciblé.' },
+  { id: 'offer',    title: 'Offres reçues',           desc: 'Vous recevez et comparez plusieurs propositions.' },
+  { id: 'closing',  title: 'Closing & déblocage',     desc: 'Signature, levée des CP, déblocage des fonds.' },
+  { id: 'won',      title: 'Opération finalisée',     desc: 'Fonds débloqués. Suivi post-closing actif.' }
+];
+
+/* =========================================
+   PIÈCES REQUISES par cas
+   ========================================= */
+function getRequiredDocs(scenario){
+  const base = [
+    { id: 'bilan',  name: 'Dernier bilan',                 desc: 'Bilan et compte de résultat de l\'exercice clos.' },
+    { id: 'kbis',   name: 'Extrait K-bis',                 desc: 'Daté de moins de 3 mois.' },
+    { id: 'relevs', name: '3 derniers relevés de compte',  desc: 'Comptes professionnels principaux.' }
+  ];
+  if(scenario === 'invest_immo' || scenario === 'invest_rachat'){
+    base.push({ id: 'statuts', name: 'Statuts de la société', desc: 'Statuts à jour signés.' });
+  }
+  return base;
+}
+
+/* =========================================
+   ARBRE DE QUALIFICATION
+   ========================================= */
+const tree = {
+  start: {
+    label: 'Étape 1 — Besoin', step: 1,
+    question: 'De quel type de financement avez-vous besoin ?',
+    hint: 'Sélectionnez le besoin principal de votre entreprise.',
+    options: [
+      { label: 'Financement d\'investissement',         next: 'inv_bilan',  meta: { besoin: 'Investissement' } },
+      { label: 'Financement trésorerie / Stock / BFR',  next: 'tre_bilan',  meta: { besoin: 'Trésorerie / BFR' } }
+    ]
+  },
+  /* ========= BRANCHE INVESTISSEMENT ========= */
+  inv_bilan: {
+    label: 'Étape 2 — Bilan', step: 2,
+    question: 'Avez-vous au moins un bilan clôturé ?',
+    options: [
+      { label: 'Oui', next: 'inv_ca' },
+      { label: 'Non', next: 'ko_bilan' }
+    ]
+  },
+  inv_ca: {
+    label: 'Étape 3 — Chiffre d\'affaires', step: 3,
+    question: 'Votre chiffre d\'affaires est-il supérieur à 500 000 € ?',
+    options: [
+      { label: 'Oui', next: 'inv_resultat' },
+      { label: 'Non', next: 'ko_ca' }
+    ]
+  },
+  inv_resultat: {
+    label: 'Étape 4 — Résultat net', step: 4,
+    question: 'Votre résultat net est-il positif ?',
+    options: [
+      { label: 'Oui', next: 'inv_fp' },
+      { label: 'Non', next: 'ko_rn' }
+    ]
+  },
+  inv_fp: {
+    label: 'Étape 5 — Fonds propres', step: 5,
+    question: 'Vos fonds propres sont-ils positifs ?',
+    options: [
+      { label: 'Oui', next: 'inv_quoi' },
+      { label: 'Non', next: 'ko_fp' }
+    ]
+  },
+  inv_quoi: {
+    label: 'Étape 6 — Objet du financement', step: 6,
+    question: 'Que souhaitez-vous financer ?',
+    options: [
+      { label: 'Immobilier',                                 next: 'identity', meta: { objet: 'Immobilier',        scenario: 'invest_immo' } },
+      { label: 'Rachat d\'entreprise / Fonds de commerce',   next: 'identity', meta: { objet: 'Rachat',            scenario: 'invest_rachat' } },
+      { label: 'Matériel / Équipement',                      next: 'identity', meta: { objet: 'Matériel',          scenario: 'invest_materiel' } },
+      { label: 'Autre besoin',                               next: 'identity', meta: { objet: 'Autre',             scenario: 'invest_autre' } }
+    ]
+  },
+  /* ========= BRANCHE TRÉSORERIE ========= */
+  tre_bilan: {
+    label: 'Étape 2 — Bilan', step: 2,
+    question: 'Avez-vous au moins un bilan clôturé ?',
+    options: [
+      { label: 'Oui', next: 'tre_ca' },
+      { label: 'Non', next: 'tre_clients' }
+    ]
+  },
+  tre_clients: {
+    label: 'Étape 3 — Clientèle', step: 3,
+    question: 'Quel est votre type de clientèle principal ?',
+    options: [
+      { label: 'Particuliers (B2C)',          next: 'ko_b2c' },
+      { label: 'Professionnels / entreprises', next: 'tre_soucis' }
+    ]
+  },
+  tre_soucis: {
+    label: 'Étape 4 — Santé bancaire', step: 4,
+    question: 'Avez-vous eu des difficultés sur vos comptes ces 3 derniers mois ?',
+    hint: 'Rejets, dépassements de découvert, interdits bancaires…',
+    options: [
+      { label: 'Non, aucune', next: 'tre_ca_sansbilan' },
+      { label: 'Oui',         next: 'ko_soucis' }
+    ]
+  },
+  tre_ca_sansbilan: {
+    label: 'Étape 5 — Chiffre d\'affaires', step: 5,
+    question: 'Votre chiffre d\'affaires est-il supérieur à 800 000 € ?',
+    options: [
+      { label: 'Oui', next: 'tre_suivi' },
+      { label: 'Non', next: 'ko_ca800' }
+    ]
+  },
+  tre_suivi: {
+    label: 'Étape 6 — Accompagnement', step: 6,
+    question: 'Souhaitez-vous bénéficier d\'un accompagnement et d\'un suivi de gestion régulier ?',
+    options: [
+      { label: 'Oui', next: 'identity', meta: { scenario: 'tre_sansbilan' } },
+      { label: 'Non', next: 'ko_suivi' }
+    ]
+  },
+  tre_ca: {
+    label: 'Étape 3 — Chiffre d\'affaires', step: 3,
+    question: 'Votre chiffre d\'affaires est-il supérieur à 900 000 € ?',
+    options: [
+      { label: 'Oui', next: 'tre_lignes' },
+      { label: 'Non', next: 'tre_fp_alt' }
+    ]
+  },
+  tre_fp_alt: {
+    label: 'Étape 4 — Fonds propres', step: 4,
+    question: 'Vos fonds propres sont-ils positifs ?',
+    options: [
+      { label: 'Oui', next: 'tre_rn_alt' },
+      { label: 'Non', next: 'ko_fp' }
+    ]
+  },
+  tre_rn_alt: {
+    label: 'Étape 5 — Résultat net', step: 5,
+    question: 'Votre résultat net est-il positif ?',
+    options: [
+      { label: 'Oui', next: 'identity', meta: { scenario: 'tre_petite' } },
+      { label: 'Non', next: 'ko_rn' }
+    ]
+  },
+  tre_lignes: {
+    label: 'Étape 4 — Lignes en place', step: 4,
+    question: 'Disposez-vous déjà de lignes court terme ?',
+    hint: 'Découvert, Dailly, escompte, affacturage…',
+    options: [
+      { label: 'Oui', next: 'tre_choix', meta: { scenario: 'tre_grande_lignes' } },
+      { label: 'Non', next: 'identity',  meta: { scenario: 'tre_grande_neuve' } }
+    ]
+  },
+  tre_choix: {
+    label: 'Étape 5 — Solutions', step: 5,
+    question: 'Quelles solutions souhaitez-vous explorer ?',
+    hint: 'Plusieurs choix possibles. Notre consultant affinera avec vous.',
+    options: [
+      { label: 'Découvert structuré',          next: 'identity', meta: { solution: 'Découvert' } },
+      { label: 'Dailly (cession de créances)', next: 'identity', meta: { solution: 'Dailly' } },
+      { label: 'Escompte commercial',          next: 'identity', meta: { solution: 'Escompte' } },
+      { label: 'Affacturage',                  next: 'identity', meta: { solution: 'Affacturage' } }
+    ]
+  },
+  /* ========= COORDONNÉES ========= */
+  identity: {
+    label: 'Dernière étape — Vous', step: 7,
+    question: 'Parfait, vous êtes éligible. Vos coordonnées ?',
+    hint: 'Un consultant vous recontacte sous 48h.',
+    custom: 'identity'
+  },
+  /* ========= REFUS ========= */
+  ko_bilan:  { ko: true, title: 'Premier bilan requis',    reason: 'Notre dispositif nécessite au minimum un bilan clôturé pour évaluer la solvabilité de votre structure.' },
+  ko_ca:     { ko: true, title: 'Critères CA non atteints', reason: 'Notre périmètre actuel cible des entreprises au-delà d\'un seuil de chiffre d\'affaires qui n\'est pas atteint.' },
+  ko_rn:     { ko: true, title: 'Rentabilité requise',     reason: 'Un résultat net positif sur le dernier exercice est nécessaire pour rendre votre dossier finançable dans les meilleures conditions.' },
+  ko_fp:     { ko: true, title: 'Fonds propres à reconstituer', reason: 'Des fonds propres positifs sont une exigence quasi-systématique des financeurs. Une recapitalisation préalable serait nécessaire.' },
+  ko_b2c:    { ko: true, title: 'Cible non couverte',      reason: 'Notre plateforme est dédiée aux entreprises ayant une clientèle B2B. Nous ne couvrons pas actuellement les activités exclusivement B2C.' },
+  ko_soucis: { ko: true, title: 'Situation bancaire fragile', reason: 'Les difficultés bancaires récentes rendent l\'accès à de nouveaux financeurs très compromis à court terme.' },
+  ko_ca800:  { ko: true, title: 'Critères CA non atteints', reason: 'Sans bilan clôturé, notre seuil minimum de chiffre d\'affaires n\'est pas atteint.' },
+  ko_suivi:  { ko: true, title: 'Accompagnement requis',   reason: 'Sans bilan disponible, un suivi de gestion régulier est indispensable pour rendre votre dossier finançable.' }
+};
+
+/* =========================================
+   PATH ÉTAT
+   ========================================= */
+let path = [];
+let answers = {};
+let currentNode = 'start';
+let state = loadState();
+
+/* =========================================
+   RENDU DE L'ARBRE
+   ========================================= */
+function renderNode(nodeId){
+  const node = tree[nodeId];
+  const content = document.getElementById('q-content');
+
+  // STEP UPDATE
+  if(node.step){
+    document.getElementById('q-label').textContent = node.label;
+    document.getElementById('q-curr').textContent = node.step;
+    const pct = (node.step / 8) * 100;
+    document.getElementById('q-bar-fill').style.width = pct + '%';
+  }
+
+  // KO
+  if(node.ko){
+    document.getElementById('q-bar-fill').style.width = '100%';
+    document.getElementById('q-label').textContent = 'Résultat';
+    document.getElementById('q-curr').textContent = '8';
+    content.innerHTML = `
+      <div class="q-result ko q-step-card">
+        <div class="q-result-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h3>${node.title}</h3>
+        <p>${node.reason}</p>
+        <p style="font-size:13px;color:var(--muted);margin-top:14px">
+          Votre situation peut évoluer. Laissez-nous vos coordonnées, et nous reviendrons vers vous dans <b style="color:#C9D0E0">6 mois</b> pour un nouveau diagnostic — sans relance commerciale entre-temps.
+        </p>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="restart()">← Refaire le diagnostic</button>
+          <button class="btn btn-primary btn-sm" onclick="askContactKO()">M'inscrire pour un suivi</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // IDENTITY
+  if(node.custom === 'identity'){
+    content.innerHTML = `
+      <div class="q-step-card">
+        <h3 class="q-question">${node.question}</h3>
+        <p class="q-hint">${node.hint}</p>
+        <div class="q-grid">
+          <div class="q-field">
+            <label>Prénom</label>
+            <input class="q-input" id="f-firstname" placeholder="Jean" />
+          </div>
+          <div class="q-field">
+            <label>Nom</label>
+            <input class="q-input" id="f-lastname" placeholder="Dupont" />
+          </div>
+        </div>
+        <div class="q-field" style="margin-bottom:14px">
+          <label>Société</label>
+          <input class="q-input" id="f-society" placeholder="Raison sociale" />
+        </div>
+        <div class="q-grid">
+          <div class="q-field">
+            <label>Email pro</label>
+            <input class="q-input" id="f-email" type="email" placeholder="vous@société.fr" />
+          </div>
+          <div class="q-field">
+            <label>Téléphone</label>
+            <input class="q-input" id="f-phone" type="tel" placeholder="06 …" />
+          </div>
+        </div>
+        <div class="q-field" style="margin-bottom:14px">
+          <label>Montant estimé du financement</label>
+          <select class="q-input" id="f-amount">
+            <option value="">Sélectionner…</option>
+            <option>100 K€ – 500 K€</option>
+            <option>500 K€ – 1 M€</option>
+            <option>1 M€ – 3 M€</option>
+            <option>3 M€ – 10 M€</option>
+            <option>+ 10 M€</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px" onclick="submitIdentity()">
+          Accéder à mon espace
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </button>
+        <div class="q-nav">
+          <button class="q-back" onclick="back()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> Précédent</button>
+          <span style="font-size:11px;color:var(--muted)">🔒 Données chiffrées</span>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // QUESTION STANDARD
+  let html = `
+    <div class="q-step-card">
+      <h3 class="q-question">${node.question}</h3>
+      ${node.hint ? `<p class="q-hint">${node.hint}</p>` : ''}
+      <div class="q-options">
+  `;
+  node.options.forEach((opt, i) => {
+    html += `<button class="q-opt" onclick="choose('${nodeId}', ${i})"><span class="check"></span>${opt.label}</button>`;
+  });
+  html += `</div>`;
+  if(path.length > 0){
+    html += `<div class="q-nav"><button class="q-back" onclick="back()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> Précédent</button></div>`;
+  }
+  html += `</div>`;
+  content.innerHTML = html;
+}
+
+function choose(nodeId, optIndex){
+  const opt = tree[nodeId].options[optIndex];
+  path.push({ node: nodeId, opt: optIndex });
+  if(opt.meta){ Object.assign(answers, opt.meta); }
+  currentNode = opt.next;
+  renderNode(currentNode);
+}
+
+function back(){
+  if(path.length === 0) return;
+  const last = path.pop();
+  currentNode = last.node;
+  // remove meta from answers (simple reset, in real app we'd track per step)
+  renderNode(currentNode);
+}
+
+function restart(){
+  path = []; answers = {}; currentNode = 'start';
+  renderNode('start');
+}
+
+function askContactKO(){
+  alert('Formulaire de suivi à 6 mois — à implémenter dans le MVP réel.');
+}
+
+function submitIdentity(){
+  const firstname = document.getElementById('f-firstname').value.trim();
+  const lastname  = document.getElementById('f-lastname').value.trim();
+  const society   = document.getElementById('f-society').value.trim();
+  const email     = document.getElementById('f-email').value.trim();
+  const phone     = document.getElementById('f-phone').value.trim();
+  const amount    = document.getElementById('f-amount').value;
+
+  if(!firstname || !lastname || !society || !email || !phone || !amount){
+    alert('Merci de compléter tous les champs pour accéder à votre espace.'); return;
+  }
+
+  // Créer le dossier client
+  const dealId = 'd-' + Date.now();
+  const newDeal = {
+    id: dealId,
+    society, firstname, lastname, email, phone,
+    contact: firstname + ' ' + lastname,
+    besoin: answers.besoin || 'Financement',
+    objet: answers.objet || '—',
+    scenario: answers.scenario || 'invest_autre',
+    solution: answers.solution || null,
+    amount: amount,
+    amountNum: amountToNumber(amount),
+    status: 'pieces',
+    docs: getRequiredDocs(answers.scenario || 'invest_autre').map(d => ({...d, uploaded: false, file: null})),
+    messages: [
+      { from: 'them', author: 'Sophie Lefèvre', text: `Bonjour ${firstname}, je suis Sophie Lefèvre, votre consultante dédiée. J'ai pris connaissance de votre dossier — pourriez-vous me transmettre votre dernier bilan dès que possible ?`, time: 'Aujourd\'hui à 09:42' },
+      { from: 'them', author: 'Sophie Lefèvre', text: 'Je suis disponible pour un point téléphonique demain entre 14h et 17h si vous le souhaitez.', time: 'Aujourd\'hui à 09:43' }
+    ],
+    createdAt: new Date().toISOString(),
+    consultant: 'Sophie Lefèvre'
+  };
+
+  state.deals.unshift(newDeal);
+  state.currentClient = dealId;
+  saveState();
+
+  // Switch to client view
+  switchToView('client');
+}
+
+function amountToNumber(s){
+  if(s.includes('100 K')) return 300000;
+  if(s.includes('500 K')) return 750000;
+  if(s.includes('1 M')) return 2000000;
+  if(s.includes('3 M')) return 6500000;
+  if(s.includes('10 M')) return 15000000;
+  return 0;
+}
+
+/* =========================================
+   CLIENT DASHBOARD RENDER
+   ========================================= */
+function renderClient(){
+  const deal = state.deals.find(d => d.id === state.currentClient) || state.deals[0];
+  if(!deal) return;
+
+  document.getElementById('client-firstname').textContent = deal.firstname;
+  document.getElementById('msg-firstname').textContent = deal.firstname;
+  document.getElementById('client-name').textContent = deal.society;
+  document.getElementById('client-contact').textContent = deal.contact + ' · Dirigeant';
+  document.getElementById('stat-amount').innerHTML = `<em>${deal.amount}</em>`;
+  document.getElementById('stat-type').textContent = deal.besoin + (deal.objet !== '—' ? ' · ' + deal.objet : '');
+
+  const statusObj = STATUSES.find(s => s.id === deal.status);
+  document.getElementById('stat-status').textContent = statusObj.label;
+
+  const docsDone = deal.docs.filter(d => d.uploaded).length;
+  document.getElementById('stat-docs-done').textContent = docsDone;
+  document.getElementById('stat-docs-total').textContent = deal.docs.length;
+  document.getElementById('stat-docs-pct').textContent = Math.round((docsDone/deal.docs.length)*100) + '% complété';
+
+  // Timeline
+  const timelineEl = document.getElementById('client-timeline');
+  const currentStep = statusObj.step;
+  timelineEl.innerHTML = TIMELINE_STEPS.map(s => {
+    const stepNum = STATUSES.find(st => st.id === s.id).step;
+    const isDone = stepNum < currentStep;
+    const isCurrent = stepNum === currentStep;
+    const cls = isDone ? 'done' : (isCurrent ? 'current' : '');
+    const dateText = isDone ? formatShortDate(addDays(deal.createdAt, stepNum-1)) : (isCurrent ? 'En cours' : '');
+    const icon = isDone
+      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+      : (isCurrent
+        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>'
+        : `<span style="font-size:13px;font-weight:600">${stepNum}</span>`);
+    return `
+      <div class="t-step ${cls}">
+        <div class="t-dot">${icon}</div>
+        <div class="t-content"><h4>${s.title}</h4><p>${s.desc}</p></div>
+        <div class="t-date">${dateText}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Documents
+  const docsEl = document.getElementById('client-docs');
+  docsEl.innerHTML = deal.docs.map((doc, i) => `
+    <div class="doc-card ${doc.uploaded ? 'uploaded' : ''}">
+      <div class="doc-head">
+        <div class="doc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2 H6 A2 2 0 0 0 4 4 V20 A2 2 0 0 0 6 22 H18 A2 2 0 0 0 20 20 V8 Z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <span class="doc-status ${doc.uploaded ? 'uploaded' : 'pending'}">
+          ${doc.uploaded ? '✓ Reçu' : '○ En attente'}
+        </span>
+      </div>
+      <div>
+        <div class="doc-name">${doc.name}</div>
+        <div class="doc-desc">${doc.desc}</div>
+      </div>
+      ${doc.uploaded
+        ? `<div class="doc-uploaded-info"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <b>${doc.file}</b> · ${doc.size}</div>`
+        : `<label class="doc-upload">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            Téléverser
+            <input type="file" style="display:none" onchange="uploadDoc('${deal.id}', ${i}, this.files[0])" />
+          </label>`
+      }
+    </div>
+  `).join('');
+
+  // Messages
+  renderThread(deal);
+}
+
+function renderThread(deal){
+  const t = document.getElementById('client-thread');
+  t.innerHTML = deal.messages.map(m => `
+    <div class="msg ${m.from}">
+      ${m.from === 'them' ? '<div class="msg-avatar">SL</div>' : `<div class="msg-avatar">${(deal.firstname||'').charAt(0)}${(deal.lastname||'').charAt(0)}</div>`}
+      <div>
+        <div class="msg-bubble">${m.text}</div>
+        <div class="msg-meta">${m.from === 'them' ? (m.author || 'Consultant') : 'Vous'} · ${m.time}</div>
+      </div>
+    </div>
+  `).join('');
+  t.scrollTop = t.scrollHeight;
+}
+
+function sendMsg(){
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if(!text) return;
+  const deal = state.deals.find(d => d.id === state.currentClient) || state.deals[0];
+  if(!deal) return;
+  deal.messages.push({ from: 'me', text, time: 'À l\'instant' });
+  input.value = '';
+  saveState();
+  renderThread(deal);
+}
+
+function uploadDoc(dealId, docIndex, file){
+  if(!file) return;
+  const deal = state.deals.find(d => d.id === dealId);
+  if(!deal) return;
+  deal.docs[docIndex].uploaded = true;
+  deal.docs[docIndex].file = file.name;
+  deal.docs[docIndex].size = formatSize(file.size);
+  // Auto-advance status if all docs complete
+  if(deal.docs.every(d => d.uploaded) && deal.status === 'pieces'){
+    deal.status = 'complete';
+  }
+  saveState();
+  renderClient();
+}
+
+function formatSize(bytes){
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1048576) return Math.round(bytes/1024) + ' KB';
+  return (bytes/1048576).toFixed(1) + ' MB';
+}
+
+/* =========================================
+   BACK-OFFICE RENDER
+   ========================================= */
+function renderBO(){
+  const deals = state.deals.filter(d => d.status !== 'lost'); // hide lost in main pipeline
+  document.getElementById('bo-count').textContent = deals.length;
+
+  const inInstruct = state.deals.filter(d => ['instruct','present','offer'].includes(d.status)).length;
+  document.getElementById('bo-stat-1').textContent = inInstruct;
+  const totalAmount = state.deals.filter(d => !['won','lost'].includes(d.status)).reduce((s,d) => s + (d.amountNum || 0), 0);
+  document.getElementById('bo-stat-2').textContent = formatEuro(totalAmount);
+  const wonThisMonth = state.deals.filter(d => d.status === 'won').length;
+  document.getElementById('bo-stat-3').textContent = wonThisMonth;
+
+  // Kanban
+  const kanban = document.getElementById('kanban');
+  const cols = STATUSES.filter(s => s.id !== 'lost');
+  kanban.innerHTML = cols.map(col => {
+    const colDeals = state.deals.filter(d => d.status === col.id);
+    return `
+      <div class="k-col">
+        <div class="k-col-head">
+          <div class="k-col-title"><span class="k-dot ${col.cls}-bg"></span>${col.label}</div>
+          <div class="k-col-count">${colDeals.length}</div>
+        </div>
+        ${colDeals.map(d => `
+          <div class="k-card" onclick="openDeal('${d.id}')">
+            <div>
+              <div class="society">${d.society}</div>
+              <div class="contact">${d.contact}</div>
+            </div>
+            <div class="amount">${d.amount}</div>
+            <div class="k-meta">
+              <span class="tag">${d.besoin}</span>
+              <span class="docs-progress">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2 H6 A2 2 0 0 0 4 4 V20 A2 2 0 0 0 6 22 H18 A2 2 0 0 0 20 20 V8 Z"/><polyline points="14 2 14 8 20 8"/></svg>
+                ${d.docs.filter(x=>x.uploaded).length}/${d.docs.length}
+              </span>
+            </div>
+          </div>
+        `).join('') || '<div style="color:var(--muted-2);font-size:12px;text-align:center;padding:30px 0">—</div>'}
+      </div>
+    `;
+  }).join('');
+}
+
+function formatEuro(n){
+  if(n >= 1000000) return (n/1000000).toFixed(1).replace('.0','') + ' M€';
+  if(n >= 1000) return Math.round(n/1000) + ' K€';
+  return n + ' €';
+}
+
+/* =========================================
+   MODAL DOSSIER
+   ========================================= */
+function openDeal(dealId){
+  const deal = state.deals.find(d => d.id === dealId);
+  if(!deal) return;
+  const modal = document.getElementById('modal-content');
+  const docsDone = deal.docs.filter(d => d.uploaded).length;
+
+  modal.innerHTML = `
+    <div class="modal-head">
+      <div>
+        <h3>${deal.society}</h3>
+        <div class="sub">${deal.contact} · ${deal.email} · ${deal.phone}</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">Synthèse du dossier</div>
+        <div class="modal-grid">
+          <div class="modal-field"><span>Type de besoin</span><span>${deal.besoin}</span></div>
+          <div class="modal-field"><span>Objet</span><span>${deal.objet}</span></div>
+          <div class="modal-field"><span>Montant</span><span style="color:var(--gold-2);font-weight:600">${deal.amount}</span></div>
+          <div class="modal-field"><span>Statut actuel</span><span>${STATUSES.find(s=>s.id===deal.status).label}</span></div>
+          <div class="modal-field"><span>Consultant</span><span>${deal.consultant}</span></div>
+          <div class="modal-field"><span>Reçu le</span><span>${formatShortDate(deal.createdAt)}</span></div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Pièces (${docsDone}/${deal.docs.length})</div>
+        <div class="doc-list-modal">
+          ${deal.docs.map(d => `
+            <div class="doc-item-modal ${d.uploaded ? 'ok' : 'missing'}">
+              ${d.uploaded
+                ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
+                : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>'}
+              <span class="name">${d.name}</span>
+              <span class="meta">${d.uploaded ? (d.file + ' · ' + d.size) : 'En attente'}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Notes internes</div>
+        <textarea style="width:100%;background:rgba(11,18,32,.5);border:1px solid var(--line);color:#fff;border-radius:10px;padding:12px;font-family:inherit;font-size:13.5px;min-height:80px;resize:vertical" placeholder="Notes confidentielles (non visibles côté client)…">${deal.notes || ''}</textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;color:var(--muted)">Faire avancer :</span>
+        <select class="status-select" onchange="changeStatus('${deal.id}', this.value)">
+          ${STATUSES.map(s => `<option value="${s.id}" ${s.id===deal.status?'selected':''}>${s.label}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="closeModal()">Fermer</button>
+        <button class="btn btn-primary btn-sm" onclick="closeModal()">Enregistrer</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal').classList.add('active');
+}
+
+function closeModal(){
+  document.getElementById('modal').classList.remove('active');
+}
+
+function changeStatus(dealId, newStatus){
+  const deal = state.deals.find(d => d.id === dealId);
+  if(!deal) return;
+  deal.status = newStatus;
+  saveState();
+  renderBO();
+  openDeal(dealId);
+}
+
+/* =========================================
+   HELPERS
+   ========================================= */
+function formatShortDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+}
+function addDays(iso, n){
+  const d = new Date(iso);
+  d.setDate(d.getDate() + n);
+  return d.toISOString();
+}
+
+/* =========================================
+   VIEW SWITCHER
+   ========================================= */
+function setView(view, btn){ switchToView(view, btn); }
+
+function switchToView(view, btn){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelectorAll('.mode-bar button').forEach(b => b.classList.remove('active'));
+  if(btn){
+    btn.classList.add('active');
+  } else {
+    const idx = { landing: 0, client: 1, bo: 2 }[view];
+    document.querySelectorAll('.mode-bar button')[idx]?.classList.add('active');
+  }
+  if(view === 'client'){
+    // If no current client, take first
+    if(!state.currentClient && state.deals.length > 0){
+      state.currentClient = state.deals[0].id;
+      saveState();
+    }
+    renderClient();
+  }
+  if(view === 'bo'){
+    renderBO();
+  }
+}
+
+/* =========================================
+   DONNÉES PAR DÉFAUT (démo)
+   ========================================= */
+function getDefaultDeals(){
+  const now = new Date().toISOString();
+  return [
+    {
+      id: 'd-demo-1',
+      society: 'Industrie Martin & Fils', firstname: 'Pierre', lastname: 'Martin',
+      contact: 'Pierre Martin', email: 'p.martin@martin-fils.fr', phone: '06 12 34 56 78',
+      besoin: 'Investissement', objet: 'Immobilier', scenario: 'invest_immo',
+      amount: '3 M€ – 10 M€', amountNum: 6500000, status: 'instruct',
+      docs: [
+        { id:'bilan', name:'Dernier bilan', desc:'Exercice clos.', uploaded:true, file:'Bilan_2024.pdf', size:'2.1 MB' },
+        { id:'kbis', name:'Extrait K-bis', desc:'< 3 mois.', uploaded:true, file:'Kbis.pdf', size:'180 KB' },
+        { id:'relevs', name:'3 derniers relevés', desc:'Comptes pro.', uploaded:true, file:'Releves.pdf', size:'3.4 MB' },
+        { id:'statuts', name:'Statuts société', desc:'À jour.', uploaded:true, file:'Statuts.pdf', size:'920 KB' }
+      ],
+      messages:[], createdAt: now, consultant:'Sophie Lefèvre'
+    },
+    {
+      id: 'd-demo-2',
+      society: 'Tech Distribution SAS', firstname: 'Claire', lastname: 'Bernard',
+      contact: 'Claire Bernard', email: 'c.bernard@techdis.fr', phone: '06 98 76 54 32',
+      besoin: 'Trésorerie / BFR', objet: '—', scenario: 'tre_grande_neuve',
+      amount: '500 K€ – 1 M€', amountNum: 750000, status: 'pieces',
+      docs: [
+        { id:'bilan', name:'Dernier bilan', desc:'Exercice clos.', uploaded:true, file:'Bilan_2024.pdf', size:'1.8 MB' },
+        { id:'kbis', name:'Extrait K-bis', desc:'< 3 mois.', uploaded:false, file:null },
+        { id:'relevs', name:'3 derniers relevés', desc:'Comptes pro.', uploaded:false, file:null }
+      ],
+      messages:[], createdAt: now, consultant:'Sophie Lefèvre'
+    },
+    {
+      id: 'd-demo-3',
+      society: 'Groupe Restauration Capucines', firstname: 'Marc', lastname: 'Dubois',
+      contact: 'Marc Dubois', email: 'm.dubois@capucines.fr', phone: '06 55 44 33 22',
+      besoin: 'Investissement', objet: 'Rachat', scenario: 'invest_rachat',
+      amount: '1 M€ – 3 M€', amountNum: 2000000, status: 'offer',
+      docs: [
+        { id:'bilan', name:'Dernier bilan', desc:'Exercice clos.', uploaded:true, file:'Bilan_2024.pdf', size:'2.4 MB' },
+        { id:'kbis', name:'Extrait K-bis', desc:'< 3 mois.', uploaded:true, file:'Kbis.pdf', size:'190 KB' },
+        { id:'relevs', name:'3 derniers relevés', desc:'Comptes pro.', uploaded:true, file:'Releves.pdf', size:'2.8 MB' },
+        { id:'statuts', name:'Statuts société', desc:'À jour.', uploaded:true, file:'Statuts.pdf', size:'1.1 MB' }
+      ],
+      messages:[], createdAt: now, consultant:'Sophie Lefèvre'
+    },
+    {
+      id: 'd-demo-4',
+      society: 'Logistique Atlantique', firstname: 'Sophie', lastname: 'Garnier',
+      contact: 'Sophie Garnier', email: 's.garnier@log-atlantique.fr', phone: '06 11 22 33 44',
+      besoin: 'Trésorerie / BFR', objet: '—', scenario: 'tre_grande_lignes',
+      solution: 'Affacturage',
+      amount: '1 M€ – 3 M€', amountNum: 1800000, status: 'present',
+      docs: [
+        { id:'bilan', name:'Dernier bilan', desc:'Exercice clos.', uploaded:true, file:'Bilan.pdf', size:'2.0 MB' },
+        { id:'kbis', name:'Extrait K-bis', desc:'< 3 mois.', uploaded:true, file:'Kbis.pdf', size:'175 KB' },
+        { id:'relevs', name:'3 derniers relevés', desc:'Comptes pro.', uploaded:true, file:'Releves.pdf', size:'3.2 MB' }
+      ],
+      messages:[], createdAt: now, consultant:'Sophie Lefèvre'
+    },
+    {
+      id: 'd-demo-5',
+      society: 'BTP Aubertin', firstname: 'Lucas', lastname: 'Aubertin',
+      contact: 'Lucas Aubertin', email: 'l.aubertin@btp-aubertin.fr', phone: '06 77 88 99 00',
+      besoin: 'Investissement', objet: 'Matériel', scenario: 'invest_materiel',
+      amount: '500 K€ – 1 M€', amountNum: 600000, status: 'won',
+      docs: [
+        { id:'bilan', name:'Dernier bilan', desc:'Exercice clos.', uploaded:true, file:'Bilan.pdf', size:'1.9 MB' },
+        { id:'kbis', name:'Extrait K-bis', desc:'< 3 mois.', uploaded:true, file:'Kbis.pdf', size:'185 KB' },
+        { id:'relevs', name:'3 derniers relevés', desc:'Comptes pro.', uploaded:true, file:'Releves.pdf', size:'2.7 MB' }
+      ],
+      messages:[], createdAt: now, consultant:'Sophie Lefèvre'
+    },
+    {
+      id: 'd-demo-6',
+      society: 'Médical Solutions', firstname: 'Anne', lastname: 'Roussel',
+      contact: 'Anne Roussel', email: 'a.roussel@medsol.fr', phone: '06 33 44 55 66',
+      besoin: 'Trésorerie / BFR', objet: '—', scenario: 'tre_petite',
+      amount: '100 K€ – 500 K€', amountNum: 300000, status: 'new',
+      docs: [
+        { id:'bilan', name:'Dernier bilan', desc:'Exercice clos.', uploaded:false, file:null },
+        { id:'kbis', name:'Extrait K-bis', desc:'< 3 mois.', uploaded:false, file:null },
+        { id:'relevs', name:'3 derniers relevés', desc:'Comptes pro.', uploaded:false, file:null }
+      ],
+      messages:[], createdAt: now, consultant:'Sophie Lefèvre'
+    },
+    {
+      id: 'd-demo-7',
+      society: 'Holding Vintage', firstname: 'Olivier', lastname: 'Lambert',
+      contact: 'Olivier Lambert', email: 'o.lambert@vintage-holding.fr', phone: '06 22 33 44 55',
+      besoin: 'Investissement', objet: 'Rachat', scenario: 'invest_rachat',
+      amount: '+ 10 M€', amountNum: 15000000, status: 'closing',
+      docs: [
+        { id:'bilan', name:'Dernier bilan', desc:'Exercice clos.', uploaded:true, file:'Bilan_consolid.pdf', size:'4.2 MB' },
+        { id:'kbis', name:'Extrait K-bis', desc:'< 3 mois.', uploaded:true, file:'Kbis.pdf', size:'195 KB' },
+        { id:'relevs', name:'3 derniers relevés', desc:'Comptes pro.', uploaded:true, file:'Releves.pdf', size:'5.1 MB' },
+        { id:'statuts', name:'Statuts société', desc:'À jour.', uploaded:true, file:'Statuts.pdf', size:'1.4 MB' }
+      ],
+      messages:[], createdAt: now, consultant:'Sophie Lefèvre'
+    }
+  ];
+}
+
+/* =========================================
+   INIT
+   ========================================= */
+renderNode('start');
+</script>
+</body>
+</html>
