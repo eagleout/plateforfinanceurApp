@@ -2,14 +2,17 @@
 
 Application web de qualification, suivi de dossier et pipeline consultant pour **plateformefinancement.fr**.
 
-> **⚠️ Statut : PROTOTYPE**
-> Ce dépôt contient un prototype fonctionnel à montrer au client. Toutes les données vivent dans le navigateur (`localStorage`) — pas de backend, pas d'authentification réelle, pas d'upload de fichiers sur serveur. La roadmap MVP en bas de ce README détaille les étapes pour passer en production.
+> **✅ Statut : PRODUCTION (backend Supabase)**
+> L'app dispose d'une authentification réelle (email + mot de passe), d'une base
+> de données partagée, d'upload de fichiers réels, du cloisonnement de sécurité
+> (RLS) et du temps réel. Le front reste **statique** (déploiement GitHub Pages
+> inchangé). **Configuration en 6 étapes : voir [`SETUP.md`](SETUP.md).**
 
 ---
 
 ## 🎯 Ce que fait l'app
 
-Trois vues connectées par une base de données partagée (simulée en `localStorage`) :
+Trois vues connectées par une base de données Supabase partagée :
 
 ### 1. Vue Prospect — qualification publique
 - Arbre de décision en 8 étapes (selon l'arborescence métier validée)
@@ -86,11 +89,16 @@ URL temporaire : `https://VOTRE-USERNAME.github.io/plateformefinancement-app/`
 
 ```
 .
-├── index.html      # App complète (HTML + CSS + JS inline)
-├── CNAME           # Sous-domaine GitHub Pages
-├── 404.html        # Page erreur dans le même style
-├── robots.txt      # Bloque l'indexation Google (app privée)
-├── README.md       # Ce fichier
+├── index.html                # Structure + design (HTML/CSS)
+├── assets/
+│   ├── supabase-config.js    # Tes clés Supabase (URL + clé anon) — À REMPLIR
+│   └── app.js                # Logique : auth, qualification, data layer, realtime
+├── supabase-schema.sql       # Schéma DB + RLS + Storage (à exécuter dans Supabase)
+├── SETUP.md                  # Guide de mise en production (6 étapes)
+├── CNAME                     # Sous-domaine GitHub Pages
+├── 404.html                  # Page erreur dans le même style
+├── robots.txt                # Bloque l'indexation Google (app privée)
+├── README.md                 # Ce fichier
 └── .gitignore
 ```
 
@@ -100,23 +108,18 @@ URL temporaire : `https://VOTRE-USERNAME.github.io/plateformefinancement-app/`
 
 ### Tester l'app
 
-Ouvre `index.html` dans n'importe quel navigateur — tout marche en local, sans serveur.
-
-En haut à droite, le **bouton de démo** permet de switcher entre les 3 vues :
-- **1. Prospect** : refais une qualification
-- **2. Client** : vois ton espace personnel
-- **3. Consultant** : vois ton dossier dans le pipeline
-
-Les données persistent dans `localStorage`. Pour **réinitialiser**, ouvre la console (F12) et tape :
-
-```js
-localStorage.removeItem('pf-app-state');
-location.reload();
-```
+1. Renseigne `assets/supabase-config.js` (voir [`SETUP.md`](SETUP.md)).
+2. Sers le dossier en local (les `assets/*.js` ne se chargent pas via `file://`) :
+   ```bash
+   python3 -m http.server 8000
+   # puis ouvre http://localhost:8000
+   ```
+3. Fais une qualification → ton compte client est créé → tu accèdes à ton espace.
+4. Pour le back-office, promeus ton compte en consultant (Étape 6 de `SETUP.md`).
 
 ### Modifier l'arbre de qualification
 
-Localise dans `index.html` la constante `const tree = {` (vers la ligne 750).
+Localise dans `assets/app.js` la constante `const tree = {`.
 
 Chaque nœud a la forme :
 ```js
@@ -143,35 +146,30 @@ ko_mon_motif: {
 
 ### Modifier les statuts du pipeline
 
-Localise `const STATUSES = [` (vers la ligne 725). L'ordre et les labels sont modifiables. La couleur de chaque colonne est dans `cls`.
+Localise `const STATUSES = [` dans `assets/app.js`. L'ordre et les labels sont modifiables. La couleur de chaque colonne est dans `cls`.
 
 ### Modifier les pièces demandées
 
-Localise la fonction `getRequiredDocs(scenario)`. Tu peux conditionner la liste selon le scénario.
+Localise la fonction `getRequiredDocs(scenario)` dans `assets/app.js`. Tu peux conditionner la liste selon le scénario.
 
 ---
 
 ## 🛣️ Roadmap MVP — vers la production
 
-Ce prototype est utilisable pour valider le concept. Pour le mettre en production réelle, voici les étapes :
+### Phase 1 — MVP fonctionnel ✅ **FAIT**
 
-### Phase 1 — MVP fonctionnel (4-6 jours)
+**Stack retenue :** front statique (GitHub Pages) + Supabase (Auth / Postgres / Storage / Realtime).
+Configuration : voir [`SETUP.md`](SETUP.md).
 
-**Stack proposée :** Next.js 14 + Supabase + Vercel — exactement l'archi ARIA Conciergerie.
-
-- [ ] Authentification réelle (Supabase Auth, magic link email)
-- [ ] Base de données PostgreSQL Supabase
-- [ ] Upload réel des pièces (Supabase Storage, S3 compatible)
-- [ ] Tables :
-  - `deals` — dossiers
-  - `documents` — pièces uploadées
-  - `messages` — messagerie
-  - `status_history` — historique des changements
-  - `consultants` — équipe interne
-- [ ] Row Level Security : chaque client ne voit que son dossier
-- [ ] Emails transactionnels (Resend) — création de compte, changement de statut, nouveau message
-- [ ] Notifications temps réel (Supabase Realtime) — quand un consultant change un statut, le client le voit en live
-- [ ] Déploiement Vercel + branchement sur `app.plateformefinancement.fr`
+- [x] Authentification réelle (Supabase Auth, email + mot de passe)
+- [x] Base de données PostgreSQL Supabase
+- [x] Upload réel des pièces (Supabase Storage, bucket privé + liens signés)
+- [x] Tables : `profiles`, `deals`, `documents`, `messages`
+- [x] Row Level Security : chaque client ne voit que son dossier
+- [x] Notifications temps réel (Supabase Realtime) — statut & messages en live
+- [x] Déploiement conservé sur GitHub Pages → `app.plateformefinancement.fr`
+- [ ] Emails transactionnels (Resend) — reporté Phase 2 (nécessite une Edge Function)
+- [ ] Historique des changements de statut (`status_history`) — reporté Phase 2
 
 ### Phase 2 — Productivité consultant (3-4 jours)
 

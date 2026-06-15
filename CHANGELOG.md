@@ -6,6 +6,38 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) — versionnag
 
 ---
 
+## [0.2.0] — 2026-06-15
+
+### 🚀 Passage en production — Backend Supabase
+
+**Sortie du prototype `localStorage`. Backend réel : Auth + Postgres + Storage + Realtime.**
+Le front reste statique (`index.html` + `assets/`) — déploiement GitHub Pages inchangé.
+
+#### Ajouté
+
+- **Authentification réelle** (Supabase Auth, email + mot de passe)
+  - Inscription du prospect en fin de qualification (création de compte + dossier)
+  - Modale de connexion pour les clients et consultants existants
+  - Routage selon le rôle : client → son espace, consultant → back-office
+- **Base de données partagée** : tables `profiles`, `deals`, `documents`, `messages`
+- **Sécurité (RLS)** : un client ne lit/écrit que son dossier ; le consultant voit tout
+- **Upload de fichiers réels** dans un bucket Storage privé `documents` (liens signés temporaires)
+- **Messagerie temps réel** bidirectionnelle (le consultant répond depuis la fiche dossier)
+- **Synchronisation temps réel** des statuts et messages entre client et consultant
+- `supabase-schema.sql` (schéma + RLS + Storage + triggers) et `SETUP.md` (guide de mise en prod)
+- `assets/supabase-config.js` pour les clés (clé `anon` publique uniquement)
+
+#### Modifié
+
+- Le sélecteur de vue « Démo » est remplacé par une vraie connexion authentifiée
+- Logique applicative déplacée du `<script>` inline vers `assets/app.js`
+
+#### Supprimé
+
+- Persistance `localStorage` et jeux de données de démo en dur
+
+---
+
 ## [0.1.0] — 2026-05-27
 
 ### 🎉 Version initiale — Prototype
