@@ -556,13 +556,13 @@ body{
         <span class="logo-wordmark"><span class="lw-1">Plateforme</span><span class="lw-2">Financement</span></span>
       </a>
       <div class="side-section">Espace consultants</div>
-      <a class="side-link active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg> Pipeline</a>
-      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21 V19 A4 4 0 0 0 13 15 H5 A4 4 0 0 0 1 19 V21"/><circle cx="9" cy="7" r="4"/><path d="M23 21 V19 A4 4 0 0 0 20 15.13 M16 3.13 A4 4 0 0 1 16 10.87"/></svg> Tous les leads</a>
-      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08 V12 A10 10 0 1 1 5.93 4.06"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Dossiers gagnés</a>
-      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Statistiques</a>
+      <a class="side-link active" onclick="boNav('pipeline', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg> Pipeline</a>
+      <a class="side-link" onclick="boNav('leads', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21 V19 A4 4 0 0 0 13 15 H5 A4 4 0 0 0 1 19 V21"/><circle cx="9" cy="7" r="4"/><path d="M23 21 V19 A4 4 0 0 0 20 15.13 M16 3.13 A4 4 0 0 1 16 10.87"/></svg> Tous les leads</a>
+      <a class="side-link" onclick="boNav('won', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08 V12 A10 10 0 1 1 5.93 4.06"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Dossiers gagnés</a>
+      <a class="side-link" onclick="boNav('stats', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Statistiques</a>
       <div class="side-section">Équipe</div>
-      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21 V19 A4 4 0 0 0 16 15 H8 A4 4 0 0 0 4 19 V21"/></svg> Consultants</a>
-      <a class="side-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16 V8 A2 2 0 0 0 19 6 L13 6 L11 4 L5 4 A2 2 0 0 0 3 6 V16 A2 2 0 0 0 5 18 H19 A2 2 0 0 0 21 16 Z"/></svg> Partenaires</a>
+      <a class="side-link" onclick="boNav('consultants', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21 V19 A4 4 0 0 0 16 15 H8 A4 4 0 0 0 4 19 V21"/></svg> Consultants</a>
+      <a class="side-link" onclick="boNav('partners', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16 V8 A2 2 0 0 0 19 6 L13 6 L11 4 L5 4 A2 2 0 0 0 3 6 V16 A2 2 0 0 0 5 18 H19 A2 2 0 0 0 21 16 Z"/></svg> Partenaires</a>
 
       <div class="client-info">
         <div class="name" id="bo-consultant-name">Consultant</div>
@@ -573,34 +573,38 @@ body{
     <main class="bo-main">
       <div class="bo-head">
         <div>
-          <h1>Pipeline des dossiers</h1>
-          <p class="sub">Vue d'ensemble · <span id="bo-count">—</span> dossiers actifs</p>
+          <h1 id="bo-title">Pipeline des dossiers</h1>
+          <p class="sub" id="bo-sub">Vue d'ensemble · <span id="bo-count">—</span> dossiers actifs</p>
         </div>
         <div style="display:flex;gap:10px">
           <button class="btn btn-ghost btn-sm" onclick="doLogout()">Se déconnecter</button>
         </div>
       </div>
 
-      <div class="bo-stats">
-        <div class="bo-stat">
-          <div class="label">En instruction</div>
-          <div class="val" id="bo-stat-1">—</div>
+      <div id="bo-pipeline">
+        <div class="bo-stats">
+          <div class="bo-stat">
+            <div class="label">En instruction</div>
+            <div class="val" id="bo-stat-1">—</div>
+          </div>
+          <div class="bo-stat">
+            <div class="label">Montant pipeline</div>
+            <div class="val"><em id="bo-stat-2">—</em></div>
+          </div>
+          <div class="bo-stat">
+            <div class="label">Closing ce mois</div>
+            <div class="val" id="bo-stat-3">—</div>
+          </div>
+          <div class="bo-stat">
+            <div class="label">Taux conversion</div>
+            <div class="val"><em id="bo-stat-4">—</em></div>
+          </div>
         </div>
-        <div class="bo-stat">
-          <div class="label">Montant pipeline</div>
-          <div class="val"><em id="bo-stat-2">—</em></div>
-        </div>
-        <div class="bo-stat">
-          <div class="label">Closing ce mois</div>
-          <div class="val" id="bo-stat-3">—</div>
-        </div>
-        <div class="bo-stat">
-          <div class="label">Taux conversion</div>
-          <div class="val"><em>62%</em></div>
-        </div>
+
+        <div class="kanban" id="kanban"></div>
       </div>
 
-      <div class="kanban" id="kanban"></div>
+      <div id="bo-content" style="display:none"></div>
     </main>
   </div>
 </div>

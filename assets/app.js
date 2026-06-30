@@ -537,7 +537,7 @@ async function refreshClient(){
 }
 async function loadBO(){
   app.deals = await fetchAllDeals();
-  renderBO();
+  renderBOCurrent();
 }
 
 /* ---------------------------------------------------------------------
@@ -627,6 +627,9 @@ function renderBO(){
   setText('bo-stat-1', deals.filter(d => ['instruct','present','offer'].includes(d.status)).length);
   setText('bo-stat-2', formatEuro(deals.filter(d => !['won','lost'].includes(d.status)).reduce((s,d)=>s+(d.amount_num||0),0)));
   setText('bo-stat-3', deals.filter(d => d.status === 'won').length);
+  const closed = deals.filter(d => ['won','lost'].includes(d.status)).length;
+  const won = deals.filter(d => d.status === 'won').length;
+  setText('bo-stat-4', closed ? Math.round((won/closed)*100) + '%' : '—');
 
   const cols = STATUSES.filter(s => s.id !== 'lost');
   document.getElementById('kanban').innerHTML = cols.map(col => {
@@ -732,6 +735,162 @@ async function boReply(dealId){
   await sendMessageDB(dealId, 'consultant', app.profile.full_name || 'Consultant', text);
   openDeal(dealId);
 }
+
+/* ---------------------------------------------------------------------
+   9bis. Navigation back-office (onglets de la sidebar)
+   ------------------------------------------------------------------- */
+const BO_TABS = {
+  pipeline:    { title: 'Pipeline des dossiers', sub: deals => `Vue d'ensemble · ${deals.filter(d=>d.status!=='lost').length} dossiers actifs` },
+  leads:       { title: 'Tous les leads',        sub: deals => `${deals.length} dossier${deals.length>1?'s':''} au total` },
+  won:         { title: 'Dossiers gagnés',       sub: deals => `${deals.filter(d=>d.status==='won').length} financement${deals.filter(d=>d.status==='won').length>1?'s':''} bouclé${deals.filter(d=>d.status==='won').length>1?'s':''}` },
+  stats:       { title: 'Statistiques',          sub: () => 'Performance globale du portefeuille' },
+  consultants: { title: 'Consultants',           sub: () => 'Répartition de la charge par consultant' },
+  partners:    { title: 'Partenaires financeurs', sub: () => 'Réseau de financeurs partenaires' }
+};
+
+function boNav(tab, linkEl){
+  app._boTab = tab;
+  document.querySelectorAll('.bo-sidebar .side-link').forEach(a => a.classList.remove('active'));
+  if(linkEl) linkEl.classList.add('active');
+  const meta = BO_TABS[tab] || BO_TABS.pipeline;
+  setText('bo-title', meta.title);
+  const sub = document.getElementById('bo-sub');
+  if(sub) sub.textContent = meta.sub(app.deals || []);
+  renderBOCurrent();
+}
+
+function renderBOCurrent(){
+  const tab = app._boTab || 'pipeline';
+  const pipeline = document.getElementById('bo-pipeline');
+  const content  = document.getElementById('bo-content');
+  if(tab === 'pipeline'){
+    pipeline.style.display = '';
+    content.style.display = 'none';
+    renderBO();
+    return;
+  }
+  pipeline.style.display = 'none';
+  content.style.display = '';
+  if(tab === 'leads')            content.innerHTML = renderLeads();
+  else if(tab === 'won')         content.innerHTML = renderWon();
+  else if(tab === 'stats')       content.innerHTML = renderStats();
+  else if(tab === 'consultants') content.innerHTML = renderConsultants();
+  else if(tab === 'partners')    content.innerHTML = renderPartners();
+}
+
+function statusBadge(id){
+  const s = STATUSES.find(x => x.id === id) || { label: id, cls: 's-new' };
+  return `<span class="tag"><span class="k-dot ${s.cls}-bg" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px"></span>${s.label}</span>`;
+}
+
+function boTableShell(headers, rows){
+  return `<div style="background:rgba(11,18,32,.5);border:1px solid var(--line);border-radius:14px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse;font-size:13.5px">
+      <thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px">
+        ${headers.map(h => `<th style="padding:14px 16px;font-weight:600;border-bottom:1px solid var(--line)">${h}</th>`).join('')}
+      </tr></thead>
+      <tbody>${rows || `<tr><td colspan="${headers.length}" style="padding:34px;text-align:center;color:var(--muted-2)">Aucun dossier pour le moment.</td></tr>`}</tbody>
+    </table>
+  </div>`;
+}
+
+function dealRow(d){
+  return `<tr style="cursor:pointer;border-bottom:1px solid var(--line)" onclick="openDeal('${d.id}')" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background='transparent'">
+    <td style="padding:14px 16px"><div style="font-weight:600;color:#E8ECF4">${escapeHtml(d.society || '—')}</div><div style="color:var(--muted);font-size:12px">${escapeHtml(d.contact || '')}</div></td>
+    <td style="padding:14px 16px;color:var(--muted)">${escapeHtml(d.besoin || '—')}</td>
+    <td style="padding:14px 16px;color:var(--gold-2);font-weight:600">${escapeHtml(d.amount || '—')}</td>
+    <td style="padding:14px 16px">${statusBadge(d.status)}</td>
+    <td style="padding:14px 16px;color:var(--muted)">${d._docs ? d._docs.done : 0}/${d._docs ? d._docs.total : 0}</td>
+    <td style="padding:14px 16px;color:var(--muted)">${formatShortDate(d.created_at)}</td>
+  </tr>`;
+}
+
+function renderLeads(){
+  const rows = app.deals.map(dealRow).join('');
+  return boTableShell(['Société', 'Besoin', 'Montant', 'Statut', 'Pièces', 'Reçu le'], rows);
+}
+
+function renderWon(){
+  const won = app.deals.filter(d => d.status === 'won');
+  const total = won.reduce((s,d) => s + (d.amount_num || 0), 0);
+  const banner = `<div class="bo-stats" style="margin-bottom:20px">
+    <div class="bo-stat"><div class="label">Dossiers gagnés</div><div class="val">${won.length}</div></div>
+    <div class="bo-stat"><div class="label">Montant total financé</div><div class="val"><em>${formatEuro(total)}</em></div></div>
+    <div class="bo-stat"><div class="label">Ticket moyen</div><div class="val"><em>${won.length ? formatEuro(Math.round(total/won.length)) : '—'}</em></div></div>
+  </div>`;
+  return banner + boTableShell(['Société', 'Besoin', 'Montant', 'Statut', 'Pièces', 'Reçu le'], won.map(dealRow).join(''));
+}
+
+function renderStats(){
+  const deals = app.deals;
+  const max = Math.max(1, ...STATUSES.map(s => deals.filter(d => d.status === s.id).length));
+  const bars = STATUSES.map(s => {
+    const n = deals.filter(d => d.status === s.id).length;
+    return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <div style="width:170px;font-size:13px;color:var(--muted);flex-shrink:0">${s.label}</div>
+      <div style="flex:1;height:22px;background:rgba(255,255,255,.04);border-radius:6px;overflow:hidden"><div class="${s.cls}-bg" style="height:100%;width:${(n/max)*100}%;min-width:${n?'6px':'0'};border-radius:6px"></div></div>
+      <div style="width:30px;text-align:right;font-weight:600;color:#E8ECF4">${n}</div>
+    </div>`;
+  }).join('');
+  const closed = deals.filter(d => ['won','lost'].includes(d.status)).length;
+  const won = deals.filter(d => d.status === 'won').length;
+  const pipeAmt = deals.filter(d => !['won','lost'].includes(d.status)).reduce((s,d)=>s+(d.amount_num||0),0);
+  const wonAmt = deals.filter(d => d.status === 'won').reduce((s,d)=>s+(d.amount_num||0),0);
+  const cards = `<div class="bo-stats" style="margin-bottom:24px">
+    <div class="bo-stat"><div class="label">Total leads</div><div class="val">${deals.length}</div></div>
+    <div class="bo-stat"><div class="label">Montant pipeline</div><div class="val"><em>${formatEuro(pipeAmt)}</em></div></div>
+    <div class="bo-stat"><div class="label">Montant gagné</div><div class="val"><em>${formatEuro(wonAmt)}</em></div></div>
+    <div class="bo-stat"><div class="label">Taux conversion</div><div class="val"><em>${closed ? Math.round((won/closed)*100)+'%' : '—'}</em></div></div>
+  </div>`;
+  return cards + `<div style="background:rgba(11,18,32,.5);border:1px solid var(--line);border-radius:14px;padding:22px 24px">
+    <div class="modal-section-title" style="margin-bottom:18px">Répartition par statut</div>${bars}</div>`;
+}
+
+function renderConsultants(){
+  const deals = app.deals;
+  const map = {};
+  deals.forEach(d => {
+    const name = (d.consultant && d.consultant.trim()) || 'Non assigné';
+    map[name] = map[name] || { name, total: 0, active: 0, won: 0, amount: 0 };
+    map[name].total++;
+    if(!['won','lost'].includes(d.status)){ map[name].active++; map[name].amount += (d.amount_num || 0); }
+    if(d.status === 'won') map[name].won++;
+  });
+  const me = app.profile && app.profile.full_name;
+  if(me && !map[me]) map[me] = { name: me, total: 0, active: 0, won: 0, amount: 0 };
+  const rows = Object.values(map).sort((a,b)=>b.total-a.total).map(c => {
+    const initials = c.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    return `<tr style="border-bottom:1px solid var(--line)">
+      <td style="padding:14px 16px"><div style="display:flex;align-items:center;gap:10px"><span style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gold-2),#b8860b);color:#0B1220;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center">${escapeHtml(initials||'—')}</span><div><div style="font-weight:600;color:#E8ECF4">${escapeHtml(c.name)}</div>${c.name===me?'<div style="color:var(--muted);font-size:12px">Vous</div>':''}</div></div></td>
+      <td style="padding:14px 16px;color:#E8ECF4;font-weight:600">${c.active}</td>
+      <td style="padding:14px 16px;color:var(--gold-2);font-weight:600">${formatEuro(c.amount)}</td>
+      <td style="padding:14px 16px;color:#E8ECF4">${c.won}</td>
+      <td style="padding:14px 16px;color:var(--muted)">${c.total}</td>
+    </tr>`;
+  }).join('');
+  return boTableShell(['Consultant', 'Dossiers actifs', 'Montant pipeline', 'Gagnés', 'Total'], rows);
+}
+
+function renderPartners(){
+  const partners = [
+    { name: 'BNP Paribas',          type: 'Banque',                 focus: 'Crédit moyen/long terme, investissement' },
+    { name: 'Société Générale',     type: 'Banque',                 focus: 'BFR, crédit-bail, affacturage' },
+    { name: 'Crédit Agricole',      type: 'Banque',                 focus: 'TPE/PME, financement matériel' },
+    { name: 'Bpifrance',            type: 'Organisme public',       focus: 'Prêts garantis, innovation, croissance' },
+    { name: 'October',              type: 'Plateforme de prêt',     focus: 'Prêt aux PME, trésorerie' },
+    { name: 'Franfinance',          type: 'Crédit-bailleur',        focus: 'Leasing & financement d\'équipement' },
+    { name: 'Defacto',              type: 'Fintech',                focus: 'Financement court terme, BFR' },
+    { name: 'Caisse d\'Épargne',    type: 'Banque',                 focus: 'Investissement, immobilier pro' }
+  ];
+  const rows = partners.map(p => `<tr style="border-bottom:1px solid var(--line)">
+    <td style="padding:14px 16px;font-weight:600;color:#E8ECF4">${p.name}</td>
+    <td style="padding:14px 16px">${statusBadgePlain(p.type)}</td>
+    <td style="padding:14px 16px;color:var(--muted)">${p.focus}</td>
+  </tr>`).join('');
+  return `<p style="color:var(--muted);font-size:13px;margin:0 0 16px">Réseau de financeurs vers lesquels les dossiers qualifiés sont orientés.</p>` +
+    boTableShell(['Partenaire', 'Type', 'Spécialité'], rows);
+}
+function statusBadgePlain(txt){ return `<span class="tag">${escapeHtml(txt)}</span>`; }
 
 /* ---------------------------------------------------------------------
    10. Helpers + view switcher
